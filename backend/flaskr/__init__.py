@@ -103,14 +103,24 @@ def create_app(test_config=None):
     def del_question(id):
 
         try:
-            question = Question.query.get(id)
+            # get the question by id
+            question = Question.query.filter_by(id=id).one_or_none()
+
+            # abort 404 if no question found
+            if question is None:
+                abort(404)
+
+            # delete the question
             question.delete()
 
+            # return success response
             return jsonify({
                 'success': True,
-                'message': "The question has been taken to a Black site"
-            }), 200
+                'deleted': id
+            })
+
         except:
+            # abort if problem deleting question
             abort(422)
 
     # '''
@@ -186,14 +196,12 @@ def create_app(test_config=None):
 
     @app.route('/categories/<int:id>/questions')
     def return_question_by_category(id):
-
-        category = Category.query.filter_by(id=id).one_or_none()
-        
-
+        _id = str(id)
+        category = Category.query.filter_by(id=_id).one_or_none()
         if (category is None):
-            abort(422)
+            abort(400,{"message":"bad request"})
 
-        questions = Question.query.filter_by(category=id).all()
+        questions = Question.query.filter_by(category=_id).all()
         paginated_questions = paginator(
         request, questions)
         
@@ -271,7 +279,7 @@ def create_app(test_config=None):
         return jsonify({
             'success': False, 
             'error': 400,
-            'message': 'https://httpstatusdogs.com/400-bad-request'
+            'message': 'bad request'
         }), 400
 
     @app.errorhandler(404)

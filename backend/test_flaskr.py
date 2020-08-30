@@ -63,7 +63,7 @@ class TriviaTestCase(unittest.TestCase):
         # check status code and message
         self.assertEqual(response.status_code, 404)
         self.assertEqual(data['success'], False)
-        self.assertEqual(data['message'], 'resource not found')
+        self.assertEqual(data['message'], 'Resource not found')
 
     def test_delete_question(self):
         """Tests question deletion success"""
@@ -72,7 +72,6 @@ class TriviaTestCase(unittest.TestCase):
         question = Question(question=self.new_question['question'], answer=self.new_question['answer'],
                             category=self.new_question['category'], difficulty=self.new_question['difficulty'])
         question.insert()
-
         # get the id of the new question
         q_id = question.id
 
@@ -87,7 +86,7 @@ class TriviaTestCase(unittest.TestCase):
         questions_after = Question.query.all()
 
         # see if the question has been deleted
-        question = Question.query.filter(Question.id == 1).one_or_none()
+        question = Question.query.filter(Question.id == q_id).one_or_none()
 
         # check status code and success message
         self.assertEqual(response.status_code, 200)
@@ -181,14 +180,14 @@ class TriviaTestCase(unittest.TestCase):
         # check response status code and message
         self.assertEqual(response.status_code, 404)
         self.assertEqual(data['success'], False)
-        self.assertEqual(data['message'], 'resource not found')
+        self.assertEqual(data['message'], 'Resource not found')
 
     def test_get_questions_by_category(self):
         """Tests getting questions by category success"""
 
         # send request with category id 1 for science
         response = self.client().get('/categories/1/questions')
-
+        print(response)
         # load response data
         data = json.loads(response.data)
 
@@ -235,7 +234,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(data['question'])
 
         # check that the question returned is in correct category
-        self.assertEqual(data['question']['category'], 1)
+        self.assertEqual(data['question']['category'], '1')
 
         # check that question returned is not on previous q list
         self.assertNotEqual(data['question']['id'], 20)
