@@ -224,11 +224,11 @@ def create_app(test_config=None):
 
         questions = Question.query.filter_by(category=id).all()
         paginated_questions = paginator(
-        request, questions, QUESTIONS_PER_PAGE)
+        request, questions)
         
         return jsonify({
             'success': True,
-            'questions': paginator,
+            'questions': paginated_questions,
             'total_questions': len(questions),
             'current_category': category.type
         })
@@ -245,10 +245,11 @@ def create_app(test_config=None):
     @app.route('/quizzes', methods=['POST'])
     def play_quiz():
         data = request.get_json()
-        old_questions = data.get('old_questions')
+        old_questions = data.get('previous_questions')
         quiz_category = data.get('quiz_category')
 
         if ((quiz_category is None) or (old_questions is None)):
+            print(old_questions)
             abort(400)
 
         if (quiz_category['id'] ==0):

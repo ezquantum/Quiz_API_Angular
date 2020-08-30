@@ -63,31 +63,22 @@ def create_app(test_config=None):
     # '''
     # ###CHECKU
 
-    ###dafuq
 
-    """Paginates questions and returns categories"""
-    @app.route('/questions')
+    @app.route('/questions', methods=['GET'])
     def get_questions():
-        '''
-        Handles GET requests for getting all questions.
-        '''
-
-        # get all questions and paginate
+        
         selection = Question.query.all()
         total_questions = len(selection)
         current_questions = paginator(request, selection)
 
-        # get all categories and add to dict
         categories = Category.query.all()
         categories_dict = {}
         for category in categories:
             categories_dict[category.id] = category.type
 
-        # abort 404 if no questions
         if (len(current_questions) == 0):
             abort(404)
 
-        # return data to view
         return jsonify({
             'success': True,
             'questions': current_questions,
@@ -131,76 +122,56 @@ def create_app(test_config=None):
     # '''
 
     @app.route('/questions', methods=['POST'])
-    def create_question():
-
+    def search_questions():
+       
         data = request.get_json()
+        print(data)
 
-        submission=request.get_json()
+        if (data.get('searchTerm')):
+            search_term = data.get('searchTerm')
 
-        answer = data.get('answer', '')
-        question = data.get('question', '')
-        category = data.get('category', '')
-        difficulty = data.get('difficulty', '')
+            selection = Question.query.filter(
+                Question.question.ilike(f'%{search_term}%')).all()
 
-        while ((answer=='') or (difficulty=='') or (category=='') or (question=='')):
-            abort(422)
+            if (len(selection) == 0):
+                abort(404)
 
-        try:
-            question = Question(
-                answer=answer,
-                question=question,
-                category=category,
-                difficulty=difficulty
-            )
-
-            question.insert()
+            paginated = paginator(request, selection)
 
             return jsonify({
                 'success': True,
-                'message': 'Question accepted'
-            }), 201
-        except:
-            abort(422)
-
-    # '''
-    # @TODO: 
-    # Create an endpoint to POST a new question, 
-    # which will require the question and answer text, 
-    # category, and difficulty score.
-
-    # TEST: When you submit a question on the "Add" tab, 
-    # the form will clear and the question will appear at the end of the last page
-    # of the questions list in the "List" tab.  
-    # '''
-
-    @app.route('/questions/search', methods=['POST'])
-    def search_questions():
-
-        data=request.get_json()
-        search_input=data.get('searchTerm', '')
-
-        while search_input =='':
-            abort(422)
-
-        try:
-            questions = Question.query.filter(
-                Question.question.ilike(f'%{search_input}%'.all())
-            )
-
-            if len(questions) ==0:
-                abort(404)
-
-            questions = Question.query.filter_by(category=id).all()
-            paginated_questions = paginator (request, questions)
-
-            return jsonify({
-                'success':True,
-                'questions': paginated_questions,
+                'questions': paginated,
                 'total_questions': len(Question.query.all())
-            }), 200
+            })
+        else:
+            new_question = data.get('question')
+            new_answer = data.get('answer')
+            new_difficulty = data.get('difficulty')
+            new_category = data.get('category')
 
-        except:
-            abort(404)
+            if ((new_question is None) or (new_answer is None)
+                    or (new_difficulty is None) or (new_category is None)):
+                abort(422, {"message":"Sorry we cannot find this question in our data"})
+
+            try:
+                question = Question(question=new_question, answer=new_answer,
+                                    difficulty=new_difficulty, category=new_category)
+                question.insert()
+
+                selection = Question.query.order_by(Question.id).all()
+                current_questions = paginator(request, selection)
+
+                return jsonify({
+                    'success': True,
+                    'created': question.id,
+                    'question_created': question.question,
+                    'questions': current_questions,
+                    'total_questions': len(Question.query.all())
+                })
+
+            except:
+                abort(422, {"message":"Sorry we cannot process this request"})
+
             
     # '''
     # @TODO: 
@@ -243,35 +214,45 @@ def create_app(test_config=None):
     # '''
 
     @app.route('/quizzes', methods=['POST'])
-    def play_quiz():
+    def get_random_quiz_question():
+        
         data = request.get_json()
-        old_questions = data.get('previous_questions')
-        quiz_category = data.get('quiz_category')
+        previous = data.get('previous_questions')
+        category = data.get('quiz_category')
 
-        if ((quiz_category is None) or (old_questions is None)):
-            print(old_questions)
+        if ((category is None) or (previous is None)):
             abort(400)
 
-        if (quiz_category['id'] ==0):
+        if (category['id'] == 0):
             questions = Question.query.all()
         else:
-            questions = Question.query.filter_by(category=quiz_category['id']).all()
-            
-        def get_random_question():
-            return questions[random.randint(0, len(questions)-1)]
-        next_question = get_random_question()
-        
-        available = True
-        while available:
-            if next_question.id in old_questions:
-                next_question = get_random_question()
-            else:
-                available = False
+            questions = Question.query.filter_by(category=category['id']).all()
 
+        total = len(questions)
+
+        def get_random_question():
+            return questions[random.randrange(0, len(questions), 1)]
+
+        def check_if_used(question):
+            used = False
+            for que in previous:
+                if (que == question.id):
+                    used = True
+            return used
+
+        question = get_random_question()
+
+        while (check_if_used(question)):
+            question = get_random_question()
+
+            if (len(previous) == total):
+                return jsonify({
+                    'success': True
+                })
         return jsonify({
-            'success':True,
-            'question': next_question.format()
-        }), 200
+            'success': True,
+            'question': question.format()
+        })
 
     # '''
     # @TODO: 

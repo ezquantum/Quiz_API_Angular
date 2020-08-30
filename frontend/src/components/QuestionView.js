@@ -95,7 +95,7 @@ class QuestionView extends Component {
         return;
       },
       error: (error) => {
-        alert('Unable to load questions. Please try your request again')
+        alert('Unable to search and find this question.')
         return;
       }
     })
