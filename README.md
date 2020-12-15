@@ -475,7 +475,6 @@ Error codes returned/used are:
 Authors
 My amazing wife for all the help
 Bob Kwon 
-Udacity for including all of the front end and starter code
 Pokemon API: from which i ripped off the formatting 
 
 
