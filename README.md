@@ -241,32 +241,6 @@ Sample: curl http://127.0.0.1:5000/quizzes -X POST -H "Content-Type: application
 
 
 
-1) NODE MODULES HAS BEEN COMPRESSED
-
-2) test_flaskr had 4 errors. There are now zero errors. 
- I sincerely hope I understood what I needed to do here. 
-
-3) My original README was in a different file, I have placed the contents within this 
-file. 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 Follow instructions to install the latest version of python for your platform in the [python docs](https://docs.python.org/3/using/unix.html#getting-and-installing-the-latest-version-of-python)
 
 #### Virtual Enviornment
